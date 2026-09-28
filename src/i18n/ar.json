@@ -85,7 +85,8 @@
   "toolUi": {
     "input": "الملف المُدخل",
     "output": "الإخراج",
-    "pages": "الصفحات المطلوبة",
+    "options": "الخيارات",
+    "pages": "الصفحات",
     "pagesToRemove": "الصفحات المراد حذفها",
     "pagesPlaceholder": "مثال: 1-4,8,11-15",
     "pagesHelp": "استخدم الفاصلة بين الصفحات والشرطة للنطاقات: 1,4,7 أو 1-4,8,11-15.",
@@ -111,6 +112,66 @@
     "errorTitle": "تعذّر الإكمال",
     "openFile": "فتح الملف",
     "openFolder": "فتح المجلد",
-    "again": "معالجة ملف آخر"
+    "again": "معالجة ملف آخر",
+    "reorderHint": "اسحب الصفحات لإعادة ترتيبها ثم احفظ.",
+    "resetOrder": "إعادة الترتيب الأصلي",
+    "pageLabel": "صفحة {{page}}",
+    "loadingPages": "جارٍ تحميل الصفحات...",
+    "imageFormat": "صيغة الصورة",
+    "dpi": "الدقة (DPI)",
+    "quality": "الجودة",
+    "pageSize": "حجم الصفحة",
+    "orientation": "الاتجاه",
+    "fitMode": "الملاءمة",
+    "margin": "الهامش (نقطة)",
+    "pageSizeOption": {
+      "a4": "A4",
+      "letter": "Letter",
+      "fit": "بحسب الصورة"
+    },
+    "orientationOption": {
+      "auto": "تلقائي",
+      "portrait": "طولي",
+      "landscape": "عرضي"
+    },
+    "fitOption": {
+      "contain": "ملاءمة (احتواء)",
+      "cover": "تعبئة (تغطية)",
+      "stretch": "تمديد"
+    },
+    "watermarkType": "نوع العلامة المائية",
+    "watermarkText": "نص",
+    "watermarkImage": "صورة",
+    "chooseImage": "اختر صورة...",
+    "fontSize": "حجم الخط",
+    "opacity": "الشفافية",
+    "colorLabel": "التدرّج",
+    "scaleLabel": "المقياس",
+    "positionLabel": "الموضع",
+    "positionOption": {
+      "center": "الوسط",
+      "topLeft": "أعلى اليسار",
+      "topRight": "أعلى اليمين",
+      "bottomLeft": "أسفل اليسار",
+      "bottomRight": "أسفل اليمين"
+    },
+    "vertical": "الموضع الرأسي",
+    "horizontal": "المحاذاة",
+    "positionTop": "أعلى",
+    "positionBottom": "أسفل",
+    "alignLeft": "يسار",
+    "alignCenter": "وسط",
+    "alignRight": "يمين",
+    "startNumber": "رقم البداية",
+    "marginLabel": "الهامش (نقطة)",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "passwordMismatch": "كلمتا المرور غير متطابقتين.",
+    "permissions": "الأذونات",
+    "allowPrinting": "السماح بالطباعة",
+    "allowCopying": "السماح بنسخ النص",
+    "allowModifying": "السماح بالتعديل",
+    "unlockPassword": "كلمة مرور المستند",
+    "unlockWarning": "أدخل كلمة المرور التي تعرفها مسبقًا. لا تحاول هذه الأداة تخمين كلمات المرور أو تجاوزها."
   }
 }

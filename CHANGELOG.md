@@ -24,6 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Placeholder app icon generator (no external dependencies).
 - CI workflow for frontend checks and Rust core tests; release workflow for the Windows
   NSIS installer.
+- **Phase 2 (rendering):** `pdf-render` adapter using the pure-Rust **hayro** rasterizer
+  (Apache-2.0 OR MIT). Lazy, cached page thumbnails (`render_thumbnail`, `pdf_info`) and the
+  **Reorder Pages** tool with drag-and-drop.
+- **Phase 3 (conversion):** **Images to PDF** (JPG/PNG/WebP, page size, orientation, fit,
+  margin) and **PDF to Images** (PNG/JPG, DPI, quality, page range).
+- **Phase 4 (generated content):** Arabic-aware text pipeline using **rustybuzz** shaping and
+  the bundled **Amiri** font (OFL-1.1) embedded as a Type0/CIDFontType2 face. **Watermark PDF**
+  (text + image, opacity, rotation, scale, position, page range) and **Page Numbers**
+  (top/bottom, left/center/right, start number, size, range).
+- **Phase 5 (security):** **Protect PDF** with AES-128 standard encryption and configurable
+  permissions, and **Unlock PDF** using a known password only (never cracking/bypass).
+- Split the application services into a Tauri-free `pdf-service` crate for portable testing,
+  and added validation tests including an Arabic watermark render check.
 
 ### Fixed
 

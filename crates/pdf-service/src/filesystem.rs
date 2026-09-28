@@ -25,19 +25,20 @@ pub fn unique_path(directory: &Path, stem: &str, extension: &str) -> PathBuf {
 }
 
 /// Pick a stem for a multi-file output (e.g. Split) whose `_001` file is free.
-pub fn unique_run_stem(directory: &Path, base: &str) -> String {
-    if run_is_free(directory, base) {
+pub fn unique_run_stem(directory: &Path, base: &str, extension: &str) -> String {
+    let extension = extension.trim_start_matches('.');
+    if run_is_free(directory, base, extension) {
         return base.to_string();
     }
     for index in 1..10_000u32 {
         let candidate = format!("{base}_{index}");
-        if run_is_free(directory, &candidate) {
+        if run_is_free(directory, &candidate, extension) {
             return candidate;
         }
     }
     format!("{base}_{}", std::process::id())
 }
 
-fn run_is_free(directory: &Path, stem: &str) -> bool {
-    !directory.join(format!("{stem}_001.pdf")).exists()
+fn run_is_free(directory: &Path, stem: &str, extension: &str) -> bool {
+    !directory.join(format!("{stem}_001.{extension}")).exists()
 }

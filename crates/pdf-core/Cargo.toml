@@ -9,6 +9,10 @@ license.workspace = true
 [dependencies]
 lopdf = { workspace = true }
 thiserror = { workspace = true }
+image = { workspace = true }
+flate2 = { workspace = true }
+rustybuzz = "0.20.1"
+ttf-parser = "0.25.1"
 
 [dev-dependencies]
 # Fixtures are generated in-process; no extra crates required.

@@ -36,8 +36,8 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all -- --check
-      - run: cargo clippy -p pdf-core --all-targets -- -D warnings
-      - run: cargo test -p pdf-core --all-targets
+      - run: cargo clippy -p pdf-core -p pdf-render -p pdf-service --all-targets -- -D warnings
+      - run: cargo test -p pdf-core -p pdf-render -p pdf-service --all-targets
 
   tauri-app:
     name: Tauri app (check)

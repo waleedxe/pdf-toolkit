@@ -85,7 +85,8 @@
   "toolUi": {
     "input": "Input file",
     "output": "Output",
-    "pages": "Pages to keep",
+    "options": "Options",
+    "pages": "Pages",
     "pagesToRemove": "Pages to remove",
     "pagesPlaceholder": "e.g. 1-4,8,11-15",
     "pagesHelp": "Use commas between pages and hyphens for ranges: 1,4,7 or 1-4,8,11-15.",
@@ -111,6 +112,66 @@
     "errorTitle": "Could not finish",
     "openFile": "Open file",
     "openFolder": "Open folder",
-    "again": "Process another"
+    "again": "Process another",
+    "reorderHint": "Drag pages to rearrange them, then save.",
+    "resetOrder": "Reset order",
+    "pageLabel": "Page {{page}}",
+    "loadingPages": "Loading pages...",
+    "imageFormat": "Image format",
+    "dpi": "Resolution (DPI)",
+    "quality": "Quality",
+    "pageSize": "Page size",
+    "orientation": "Orientation",
+    "fitMode": "Scaling",
+    "margin": "Margin (pt)",
+    "pageSizeOption": {
+      "a4": "A4",
+      "letter": "Letter",
+      "fit": "Fit to image"
+    },
+    "orientationOption": {
+      "auto": "Auto",
+      "portrait": "Portrait",
+      "landscape": "Landscape"
+    },
+    "fitOption": {
+      "contain": "Fit (contain)",
+      "cover": "Fill (cover)",
+      "stretch": "Stretch"
+    },
+    "watermarkType": "Watermark type",
+    "watermarkText": "Text",
+    "watermarkImage": "Image",
+    "chooseImage": "Choose image...",
+    "fontSize": "Font size",
+    "opacity": "Opacity",
+    "colorLabel": "Shade",
+    "scaleLabel": "Scale",
+    "positionLabel": "Position",
+    "positionOption": {
+      "center": "Center",
+      "topLeft": "Top left",
+      "topRight": "Top right",
+      "bottomLeft": "Bottom left",
+      "bottomRight": "Bottom right"
+    },
+    "vertical": "Vertical position",
+    "horizontal": "Alignment",
+    "positionTop": "Top",
+    "positionBottom": "Bottom",
+    "alignLeft": "Left",
+    "alignCenter": "Center",
+    "alignRight": "Right",
+    "startNumber": "Start number",
+    "marginLabel": "Margin (pt)",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "The passwords do not match.",
+    "permissions": "Permissions",
+    "allowPrinting": "Allow printing",
+    "allowCopying": "Allow copying text",
+    "allowModifying": "Allow modifying",
+    "unlockPassword": "Document password",
+    "unlockWarning": "Enter the password you already know. This tool never guesses or bypasses passwords."
   }
 }

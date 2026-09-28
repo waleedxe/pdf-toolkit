@@ -172,3 +172,26 @@ principle, while making the engineering loop runnable locally.
   8. **Gate green**: `format:check`, `lint`, `typecheck`, 12 frontend tests, `vite build`;
      `cargo fmt`, `clippy -D warnings`, 23 `pdf-core` tests.
   9. **Next:** Phase 2 — renderer + thumbnails + Reorder, then Phase 3+.
+
+- **Session 3** (continued autonomously through all remaining phases):
+  1. **Renderer decision:** chose **hayro** (pure Rust, Apache-2.0 OR MIT) over PDFium/MuPDF —
+     no native library to ship, self-contained installer. Added crate `crates/pdf-render`.
+  2. **Phase 2:** lazy + cached page thumbnails (`render_thumbnail` with in-memory cache,
+     `pdf_info`), `PageThumbnail` with IntersectionObserver, and the **Reorder** tool with
+     drag-and-drop.
+  3. **Phase 3:** **Images to PDF** (JPG/PNG/WebP; page size/orientation/fit/margin) and
+     **PDF to Images** (PNG/JPG, DPI, quality, range). Extracted the Tauri-free
+     `crates/pdf-service` crate so all orchestration is unit-testable locally.
+  4. **Phase 4:** Arabic text pipeline — **rustybuzz** shaping + **Amiri** font (OFL-1.1)
+     embedded as Type0/CIDFontType2. **Watermark** (text + image) and **Page Numbers**.
+     Validated by a render test proving the Arabic watermark produces visible glyphs.
+  5. **Phase 5:** **Protect** (AES-128, V4 security handler, permissions) and **Unlock**
+     (known password only). Added file `/ID` when missing so minimal PDFs can be encrypted.
+  6. **Phase 6:** settings + persisted language, actionable errors, lazy rendering,
+     privacy messaging, a11y labels (existing polish retained; recent-tasks left optional).
+  7. **Phase 7:** updated README, THIRD_PARTY_LICENSES (all permissive), CHANGELOG, fixtures
+     docs; CI now lints/tests all three engine crates; added `@tauri-apps/cli`.
+  8. **All 12 MVP tools are implemented and wired end-to-end.** Local gates green
+     (frontend lint/typecheck/tests/build; `cargo fmt`/`clippy -D warnings`/tests across
+     `pdf-core`, `pdf-render`, `pdf-service`). The Tauri app crate remains checked on the
+     Windows CI runner (no WebKitGTK on Ubuntu 20.04).

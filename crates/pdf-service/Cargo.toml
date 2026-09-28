@@ -1,0 +1,14 @@
+[package]
+name = "pdf-service"
+description = "Application-level PDF services (naming, tool orchestration) for PDF Toolkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+pdf-core = { path = "../pdf-core" }
+pdf-render = { path = "../pdf-render" }
+
+[dev-dependencies]
+lopdf = { workspace = true }

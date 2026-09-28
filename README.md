@@ -5,25 +5,33 @@ popular online PDF websites while processing everything **on your device**.
 
 - 🔒 **Private by design** — files never leave your computer. No uploads, no cloud
   conversion, no accounts.
-- 🌍 **Arabic + English from day one** — first-class translations plus true right-to-left
-  (RTL) layout, and Arabic-capable text rendering for generated PDF content.
-- ⚡ **Fast and responsive** — heavy work runs in the background; large PDFs never freeze
-  the interface.
-- 🧩 **Modular tools** — one consistent tool contract and job system across all tools.
+- 🌍 **Arabic + English from day one** — first-class translations, true right-to-left (RTL)
+  layout, and genuine Arabic text support in generated PDF content (shaping + font embedding).
+- ⚡ **Fast and responsive** — heavy work runs off the UI thread; page thumbnails render lazily
+  so large PDFs never freeze the interface.
+- 🧩 **Modular tools** — one consistent tool contract and engine-adapter architecture.
 
-> **Status:** early development (Phase 0 — foundation). See [Roadmap](#roadmap).
+> **Status:** MVP complete. All twelve tools work on real documents.
 
-## Supported tools (MVP target)
+## Supported tools
 
 | Category | Tools |
 | --- | --- |
 | **Organize** | Merge PDF · Split PDF · Extract Pages · Remove Pages · Reorder Pages |
-| **Convert** | Images to PDF · PDF to Images |
-| **Edit** | Rotate Pages · Watermark PDF · Page Numbers |
-| **Security** | Protect PDF · Unlock PDF (with a password you know) |
+| **Convert** | Images to PDF (JPG/PNG/WebP) · PDF to Images (PNG/JPG, DPI + quality) |
+| **Edit** | Rotate Pages · Watermark PDF (text + image, Arabic-aware) · Page Numbers |
+| **Security** | Protect PDF (AES-128 password) · Unlock PDF (with a password you know) |
 
 Unlock **never** implements password cracking, brute forcing, or bypass. It only removes
 protection when you provide the correct password.
+
+### Notes on behaviour
+
+- Originals are **never overwritten**; every tool writes a new file and safe incrementing
+  names are used on collision.
+- Page-oriented tools accept selections like `1`, `1,4,7`, and `1-4,8,11-15`.
+- Reorder, Remove, Rotate, and Extract use lazily rendered page thumbnails.
+- Output is produced by the Rust backend; the webview never receives whole documents.
 
 ## Privacy
 
@@ -42,44 +50,46 @@ See [PRIVACY.md](PRIVACY.md) for details.
 
 Arabic is a first-class citizen, not an afterthought:
 
-- the entire UI is translated (English / Arabic) with a language switcher
+- the entire UI is translated (English / Arabic) with a language switcher and persisted choice
 - the layout switches between LTR and RTL, mirroring navigation and icons
 - Arabic file names, folder names, and Unicode paths are supported
-- generated text (watermarks, page-number labels) uses Arabic shaping, RTL ordering, and
-  proper font embedding — no disconnected letters
+- generated text (watermarks, page-number labels) is shaped with **rustybuzz** (contextual
+  forms, RTL ordering) and embedded as a **Type0/CIDFontType2** font using the bundled
+  **Amiri** face — no disconnected letters, no dependency on system fonts
+- mixed Arabic + English + digits is handled in one pass
 
-Arabic-friendliness is validated with real fixtures (Arabic and mixed Arabic/English PDFs),
-not just translated strings.
+Arabic rendering is validated by a test that rasterizes a real watermarked PDF and checks
+that the glyphs actually appear.
 
 ## Architecture
 
 ```text
 UI (React + TypeScript)
   ↓ Tauri command
-Tauri layer (src-tauri)
-  ↓ service
-PDF core (crates/pdf-core) — engine-agnostic
-  ↓ adapter
-PDF engine (lopdf, and a renderer for thumbnails)
+src-tauri          — thin command surface + in-memory thumbnail cache
+  ↓
+crates/pdf-service — application services: output naming, tool orchestration
+  ↓
+crates/pdf-core    — manipulation + text (lopdf, rustybuzz, image)
+crates/pdf-render  — rasterization (hayro)
 ```
 
-- Every external engine is wrapped behind an adapter, so engines can be replaced later.
-- The PDF core is a standalone Rust library, which makes it unit-testable on any platform
-  without the GUI dependencies.
+- External engines are wrapped behind adapters, so a library can be replaced without touching
+  the UI or command layer.
+- `pdf-service` has no Tauri dependency, so the tool orchestration is fully unit-testable on
+  any platform.
+- The Tauri application crate is built/checked on the Windows CI runner (see Limitations).
 
 ### Repository layout
 
 ```text
 src/                      React + TypeScript frontend
-  app/                    application shell
-  components/             shared UI (common, file-drop, progress, page-grid, ...)
-  features/               home, settings, history
-  tools/                  one folder per PDF tool
-  i18n/                   en.json, ar.json, direction helpers
-  stores/                 Zustand stores
-crates/pdf-core/          engine-agnostic Rust PDF library
+  app/ components/ features/ tools/ i18n/ stores/ hooks/ types/ lib/
+crates/pdf-core/          engine-agnostic PDF library (manipulation, text, security)
+crates/pdf-render/        PDF rasterization adapter (hayro)
+crates/pdf-service/       application services (naming + orchestration)
 src-tauri/                Tauri 2 application (Rust)
-assets/fonts/             redistributable fonts (incl. Arabic)
+assets/fonts/             bundled Amiri font (OFL-1.1) + license
 tests/fixtures/           legally safe test fixtures
 .github/workflows/        CI + release
 ```
@@ -89,9 +99,9 @@ tests/fixtures/           legally safe test fixtures
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) 20+ (22 recommended) and npm
-- [Rust](https://rustup.rs/) stable
+- [Rust](https://rustup.rs/) 1.92+ (stable)
 - [Tauri 2 prerequisites](https://tauri.app/start/prerequisites/) for your OS (on Windows:
-  WebView2, which ships with Windows 10/11; build tools for MSVC)
+  WebView2, which ships with Windows 10/11; MSVC build tools)
 
 ### Commands
 
@@ -103,9 +113,9 @@ npm run typecheck      # TypeScript
 npm run lint           # ESLint
 npm run test           # frontend tests (Vitest)
 
-cargo test -p pdf-core --all-targets   # Rust PDF core tests
-cargo fmt --all -- --check             # Rust formatting
-cargo clippy -p pdf-core --all-targets -- -D warnings
+cargo test -p pdf-core -p pdf-render -p pdf-service --all-targets
+cargo fmt --all -- --check
+cargo clippy -p pdf-core -p pdf-render -p pdf-service --all-targets -- -D warnings
 ```
 
 ### Production build (Windows)
@@ -114,44 +124,29 @@ cargo clippy -p pdf-core --all-targets -- -D warnings
 npm run tauri build
 ```
 
-This produces an executable and an NSIS installer under
-`src-tauri/target/release/bundle/`. Code signing is not configured yet; see
-[BLOCKERS.md](BLOCKERS.md) if it exists.
+This produces an executable and an NSIS installer under `src-tauri/target/release/bundle/`.
 
 ## Install (end users)
 
 Download the latest NSIS installer (`PDF Toolkit_x.y.z_x64-setup.exe`) from the
 [Releases](../../releases) page and run it. No account, no internet connection required.
 
-## Development
-
-- Engineering loop: implement → format → lint → typecheck → `rustfmt` → `clippy` → tests →
-  real-PDF fixture test → production build.
-- Commits are logical and scoped (`feat: implement pdf merge`, `test: add pdf fixtures`).
-- See [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## Limitations
 
 - Windows 10/11 is the primary target.
-- OCR, Office conversion, digital signatures, and cloud features are intentionally **out of
-  scope** for the MVP.
-- Code signing and auto-updates are planned but not yet configured.
+- The Tauri application crate cannot be compiled on the Linux development machine used here
+  (Ubuntu 20.04 lacks WebKitGTK 4.1); it is checked on the Windows CI runner.
+- Code signing and auto-updates are not configured yet; installers are published as-is.
+- OCR, Office conversion, and cloud features are intentionally **out of scope** for the MVP.
 
 ## Roadmap
 
-- **Phase 0** Foundation (Tauri 2 + React + TS, i18n, RTL shell) ← *current*
-- **Phase 1** PDF core: Merge, Split, Extract, Remove, Rotate
-- **Phase 2** Rendering, thumbnails, Reorder
-- **Phase 3** Images to PDF, PDF to Images
-- **Phase 4** Watermark (Arabic-validated), Page Numbers
-- **Phase 5** Protect, Unlock
-- **Phase 6** Polish: settings, history, errors, cancellation, accessibility, performance
-- **Phase 7** Release: installer, CI, docs
-
-Post-MVP ideas (OCR, PDF↔Office, AI features) are planned for later and the architecture is
-designed not to prevent them.
+- ✅ **MVP** — foundation, PDF core, rendering/thumbnails, conversion, generated content
+  (Arabic-validated), security, polish, release tooling.
+- Post-MVP (architecture keeps these possible): OCR with optional downloadable language packs,
+  PDF↔Office conversion, and AI features.
 
 ## License
 
 To be finalized before public release. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
-for third-party components.
+for third-party components; all bundled engines use permissive licenses.

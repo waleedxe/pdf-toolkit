@@ -1,11 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["src-tauri", "crates/pdf-core"]
+members = ["src-tauri", "crates/pdf-core", "crates/pdf-render", "crates/pdf-service"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.77"
+rust-version = "1.92"
 license = "MIT"
 
 [workspace.dependencies]
@@ -13,6 +13,10 @@ thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 lopdf = "0.45"
+hayro = { version = "0.7", features = ["embed-fonts"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+flate2 = "1"
+base64 = "0.22"
 
 # Release profile optimized for small, fast Windows binaries.
 [profile.release]

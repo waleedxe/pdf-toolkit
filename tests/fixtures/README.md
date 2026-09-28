@@ -10,13 +10,15 @@ never committed.
 | --- | --- | --- |
 | One-page PDF | baseline | generated in `pdf-core` tests |
 | Multi-page PDF | page count / ranges / reorder | generated in `pdf-core` tests |
-| PDF with images | images-to-pdf / pdf-to-images | planned |
-| Arabic PDF | Arabic rendering | planned |
-| Mixed Arabic/English PDF | mixed text | planned |
-| Password-protected PDF | protect / unlock | planned |
-| Malformed PDF | safe failure | covered in `pdf-core` tests |
+| PDF with images | images-to-pdf / pdf-to-images | generated in `pdf-core` and `pdf-service` tests |
+| Arabic PDF | Arabic rendering | generated + rendered in `pdf-core`/`pdf-render` text tests |
+| Mixed Arabic/English PDF | mixed text | generated in `pdf-core` text tests |
+| Password-protected PDF | protect / unlock | generated in `pdf-core` security tests |
+| Malformed PDF | safe failure | covered in `pdf-core` and `pdf-render` tests |
 | Large PDF (100+ pages) | performance | generate on demand |
-| JPG / PNG images | images-to-pdf | planned |
+| JPG / PNG images | images-to-pdf | generated via the `image` crate in tests |
+
+All fixtures above are generated programmatically at test time; none are committed.
 
 ## Rules
 

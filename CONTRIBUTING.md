@@ -30,8 +30,8 @@ npm run typecheck
 npm run test
 
 cargo fmt --all -- --check
-cargo clippy -p pdf-core --all-targets -- -D warnings
-cargo test -p pdf-core --all-targets
+cargo clippy -p pdf-core -p pdf-render -p pdf-service --all-targets -- -D warnings
+cargo test -p pdf-core -p pdf-render -p pdf-service --all-targets
 ```
 
 Then, for changes that affect real output, run the relevant operation against a real PDF

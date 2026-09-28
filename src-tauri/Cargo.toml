@@ -19,8 +19,11 @@ tauri-plugin-dialog = "2.7.3"
 tauri-plugin-opener = "2.5.5"
 
 pdf-core = { path = "../crates/pdf-core" }
+pdf-render = { path = "../crates/pdf-render" }
+pdf-service = { path = "../crates/pdf-service" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+base64 = { workspace = true }
 
 [features]
 # Used by Tauri for production builds without a dev server.

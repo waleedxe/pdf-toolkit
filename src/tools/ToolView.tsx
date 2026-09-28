@@ -9,14 +9,28 @@ import { SplitTool } from "./split/SplitTool";
 import { ExtractTool } from "./extract/ExtractTool";
 import { RemoveTool } from "./remove/RemoveTool";
 import { RotateTool } from "./rotate/RotateTool";
+import { ReorderTool } from "./reorder/ReorderTool";
+import { PdfToImagesTool } from "./pdf-to-images/PdfToImagesTool";
+import { ImagesToPdfTool } from "./images-to-pdf/ImagesToPdfTool";
+import { WatermarkTool } from "./watermark/WatermarkTool";
+import { PageNumbersTool } from "./page-numbers/PageNumbersTool";
+import { ProtectTool } from "./protect/ProtectTool";
+import { UnlockTool } from "./unlock/UnlockTool";
 
-/** Tools that are implemented so far (Phase 1). */
+/** Every MVP tool is implemented. */
 const IMPLEMENTED: Partial<Record<ToolId, ComponentType>> = {
   merge: MergeTool,
   split: SplitTool,
   extract: ExtractTool,
   remove: RemoveTool,
   rotate: RotateTool,
+  reorder: ReorderTool,
+  "pdf-to-images": PdfToImagesTool,
+  "images-to-pdf": ImagesToPdfTool,
+  watermark: WatermarkTool,
+  "page-numbers": PageNumbersTool,
+  protect: ProtectTool,
+  unlock: UnlockTool,
 };
 
 interface ToolViewProps {
