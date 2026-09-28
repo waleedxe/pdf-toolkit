@@ -209,8 +209,11 @@ principle, while making the engineering loop runnable locally.
   4. Fixed two more real issues: Tauri plugin npm/crate version drift, and mobile
      `staticlib`/`cdylib` targets overflowing the GNU linker's export ordinals (desktop-only
      now: `crate-type = ["rlib"]`).
-  5. **Result:** `cargo check -p pdf-toolkit --target x86_64-pc-windows-gnu` passes, the
-     **Windows app `.exe` builds/links**, and the **NSIS installer is produced**
-     (`…/bundle/nsis/PDF Toolkit_0.1.0_x64-setup.exe`, ~54 MiB debug).
-  6. **Still open:** launching the app at runtime (needs Windows/Wine); release-profile
-     installer; GitHub push/CI. Everything else is verified locally.
+  5. **Result:** `cargo check -p pdf-toolkit --target x86_64-pc-windows-gnu` passes, and the
+     GNU cross-build *links* an `.exe` + NSIS installer. **However, that exe does not run on
+     Windows** — GNU `ld` mangles a Rust-generated import (a "GetTimeZoneInformationForYear"
+     entry-point error at launch; the logs warned "corrupt .drectve"). So the GNU cross route
+     validates *compilation* only, not the runtime artifact.
+  6. **Conclusion:** the supported Windows build is **MSVC** — natively on Windows, or via the
+     GitHub Actions `release.yml` (windows-latest). Do not ship the GNU cross-built installer.
+  7. **Still open:** runtime launch and the official MSVC installer (Windows/CI); GitHub push.
