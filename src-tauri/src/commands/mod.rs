@@ -13,6 +13,8 @@ use pdf_render::ImageFormat;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
+use crate::pdf;
+
 /// In-memory cache of rendered thumbnails, keyed by `path|page|width`.
 #[derive(Default)]
 pub struct ThumbnailCache(pub Mutex<HashMap<String, ThumbnailResult>>);
