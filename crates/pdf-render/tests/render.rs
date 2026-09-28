@@ -65,7 +65,13 @@ fn build_pdf(page_count: usize) -> Vec<u8> {
 }
 
 fn sample_path() -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("pdf-render-test-{}", std::process::id()));
+    // Give every test its own directory: cargo runs tests in parallel, and a
+    // shared fixture file can be read while another test is rewriting it.
+    let name = std::thread::current()
+        .name()
+        .unwrap_or("test")
+        .replace("::", "_");
+    let dir = std::env::temp_dir().join(format!("pdf-render-test-{name}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("temp dir");
     let path = dir.join("sample.pdf");
     std::fs::write(&path, build_pdf(2)).expect("write fixture");
