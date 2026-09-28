@@ -1,0 +1,23 @@
+[workspace]
+resolver = "2"
+members = ["src-tauri", "crates/pdf-core"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+license = "MIT"
+
+[workspace.dependencies]
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+lopdf = "0.45"
+
+# Release profile optimized for small, fast Windows binaries.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

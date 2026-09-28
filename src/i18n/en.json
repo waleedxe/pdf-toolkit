@@ -1,0 +1,116 @@
+{
+  "app": {
+    "name": "PDF Toolkit",
+    "tagline": "Fast, private PDF tools that run entirely on your device."
+  },
+  "nav": {
+    "home": "Home",
+    "settings": "Settings",
+    "language": "Language"
+  },
+  "categories": {
+    "organize": "Organize",
+    "convert": "Convert",
+    "edit": "Edit",
+    "security": "Security"
+  },
+  "tools": {
+    "merge": {
+      "title": "Merge PDF",
+      "description": "Combine multiple PDF files into a single document."
+    },
+    "split": {
+      "title": "Split PDF",
+      "description": "Split a PDF by every page, ranges, or selected ranges."
+    },
+    "extract": {
+      "title": "Extract Pages",
+      "description": "Create a new PDF from selected pages, such as 1-4,8,11-15."
+    },
+    "remove": {
+      "title": "Remove Pages",
+      "description": "Delete selected pages and save a new PDF."
+    },
+    "rotate": {
+      "title": "Rotate Pages",
+      "description": "Rotate all or selected pages by 90°, 180°, or 270°."
+    },
+    "reorder": {
+      "title": "Reorder Pages",
+      "description": "Rearrange pages in a drag-and-drop thumbnail grid."
+    },
+    "images-to-pdf": {
+      "title": "Images to PDF",
+      "description": "Turn JPG, PNG, and WebP images into a single PDF."
+    },
+    "pdf-to-images": {
+      "title": "PDF to Images",
+      "description": "Export pages as PNG or JPG at a chosen DPI and quality."
+    },
+    "watermark": {
+      "title": "Watermark PDF",
+      "description": "Stamp text or an image with full Arabic text support."
+    },
+    "page-numbers": {
+      "title": "Page Numbers",
+      "description": "Add page numbers with position, range, and size options."
+    },
+    "protect": {
+      "title": "Protect PDF",
+      "description": "Encrypt a PDF with a password you choose."
+    },
+    "unlock": {
+      "title": "Unlock PDF",
+      "description": "Remove protection using a password you already know."
+    }
+  },
+  "home": {
+    "title": "All tools",
+    "subtitle": "Everything runs offline. Your files never leave this computer.",
+    "privacy": "Files are processed locally on your device."
+  },
+  "tool": {
+    "comingSoon": "This tool is being built. It will be available in a later phase.",
+    "back": "Back to all tools"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageHelp": "Change the interface language. The layout flips for right-to-left languages.",
+    "privacyTitle": "Privacy",
+    "privacyBody": "PDF Toolkit processes files locally. There are no uploads, no cloud conversions, and no analytics that include your file names or contents.",
+    "aboutTitle": "About",
+    "aboutBody": "PDF Toolkit is a local-first, offline desktop utility for Windows."
+  },
+  "toolUi": {
+    "input": "Input file",
+    "output": "Output",
+    "pages": "Pages to keep",
+    "pagesToRemove": "Pages to remove",
+    "pagesPlaceholder": "e.g. 1-4,8,11-15",
+    "pagesHelp": "Use commas between pages and hyphens for ranges: 1,4,7 or 1-4,8,11-15.",
+    "chooseOutput": "Choose output file...",
+    "noOutput": "No output file chosen yet.",
+    "chooseFolder": "Choose output folder...",
+    "baseName": "File name prefix",
+    "splitMode": "Split mode",
+    "modeEveryPage": "One file per page",
+    "modeRanges": "One file per range",
+    "rotation": "Rotation",
+    "angle": "{{angle}}\u00b0",
+    "allPages": "All pages",
+    "addMore": "+ Add more files",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "dropHere": "Drag & drop files here",
+    "browse": "or click to browse",
+    "remove": "Remove",
+    "processing": "Processing...",
+    "successOne": "Your file is ready.",
+    "successMany": "{{count}} files are ready.",
+    "errorTitle": "Could not finish",
+    "openFile": "Open file",
+    "openFolder": "Open folder",
+    "again": "Process another"
+  }
+}

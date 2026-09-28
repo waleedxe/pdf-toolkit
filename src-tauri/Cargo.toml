@@ -1,0 +1,27 @@
+[package]
+name = "pdf-toolkit"
+description = "Local-first, offline PDF desktop toolkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+name = "pdf_toolkit_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.0", features = [] }
+tauri-plugin-dialog = "2.7.3"
+tauri-plugin-opener = "2.5.5"
+
+pdf-core = { path = "../crates/pdf-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[features]
+# Used by Tauri for production builds without a dev server.
+custom-protocol = ["tauri/custom-protocol"]
