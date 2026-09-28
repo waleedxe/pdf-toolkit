@@ -195,3 +195,22 @@ principle, while making the engineering loop runnable locally.
      (frontend lint/typecheck/tests/build; `cargo fmt`/`clippy -D warnings`/tests across
      `pdf-core`, `pdf-render`, `pdf-service`). The Tauri app crate remains checked on the
      Windows CI runner (no WebKitGTK on Ubuntu 20.04).
+
+- **Session 4** (Windows validation performed *on the Linux box* by cross-compiling):
+  1. Discovered the app crate had **never compiled**: `commands/mod.rs` used `pdf::…`
+     without `use crate::pdf;`. Fixed.
+  2. Set up a user-space Windows GNU toolchain (no root): `rustup target add
+     x86_64-pc-windows-gnu`, then extracted `binutils`/`gcc`/`nsis` `.deb`s with
+     `apt-get download` + `dpkg-deb -x`; added a `gcc` wrapper (`-B` + `--sysroot`) and a
+     `makensis` wrapper forcing `NSISDIR`.
+  3. Overlaid **NSIS 3.11** `Include`/`Stubs`/`Plugins` (Ubuntu 3.05's `Win/COM.nsh` lacks
+     `ICustomDestinationList`, which Tauri's installer uses) and added the Tauri
+     `ApplicationID.dll` plugin.
+  4. Fixed two more real issues: Tauri plugin npm/crate version drift, and mobile
+     `staticlib`/`cdylib` targets overflowing the GNU linker's export ordinals (desktop-only
+     now: `crate-type = ["rlib"]`).
+  5. **Result:** `cargo check -p pdf-toolkit --target x86_64-pc-windows-gnu` passes, the
+     **Windows app `.exe` builds/links**, and the **NSIS installer is produced**
+     (`…/bundle/nsis/PDF Toolkit_0.1.0_x64-setup.exe`, ~54 MiB debug).
+  6. **Still open:** launching the app at runtime (needs Windows/Wine); release-profile
+     installer; GitHub push/CI. Everything else is verified locally.
