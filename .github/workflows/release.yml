@@ -35,9 +35,22 @@ jobs:
       - name: Build Tauri app (NSIS installer)
         run: npm run tauri build
 
+      # A portable build: just the .exe plus the WebView2 loader if one was
+      # produced. No installation step required.
+      - name: Assemble portable build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path portable | Out-Null
+          Copy-Item src-tauri/target/release/pdf-toolkit.exe portable/
+          if (Test-Path src-tauri/target/release/WebView2Loader.dll) {
+            Copy-Item src-tauri/target/release/WebView2Loader.dll portable/
+          }
+          Compress-Archive -Path portable/* -DestinationPath PDF-Toolkit-portable-windows-x64.zip -Force
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
             src-tauri/target/release/bundle/nsis/*.exe
+            PDF-Toolkit-portable-windows-x64.zip
