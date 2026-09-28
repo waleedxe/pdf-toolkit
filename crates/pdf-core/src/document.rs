@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use lopdf::Document;
 
-use crate::error::{PdfCoreError, PdfCoreResult};
+use crate::error::PdfCoreResult;
 
 /// A loaded PDF document.
 ///
@@ -17,7 +17,7 @@ impl PdfDocument {
     /// Open a PDF from disk.
     pub fn open(path: impl AsRef<Path>) -> PdfCoreResult<Self> {
         let path = path.as_ref();
-        let inner = Document::load(path).map_err(|error| map_load_error(path, error))?;
+        let inner = crate::loading::load(path)?;
         Ok(Self {
             inner,
             source: path.to_path_buf(),
@@ -26,7 +26,7 @@ impl PdfDocument {
 
     /// Load a PDF from memory. Used by tests and by tools that build documents.
     pub fn from_bytes(bytes: &[u8]) -> PdfCoreResult<Self> {
-        let inner = Document::load_mem(bytes).map_err(PdfCoreError::from_engine)?;
+        let inner = crate::loading::load_mem(bytes)?;
         Ok(Self {
             inner,
             source: PathBuf::new(),
@@ -42,16 +42,4 @@ impl PdfDocument {
     pub fn source_path(&self) -> &Path {
         &self.source
     }
-}
-
-fn map_load_error(path: &Path, error: lopdf::Error) -> PdfCoreError {
-    // A read failure should be reported as I/O; everything else is treated as
-    // a malformed or protected PDF by `from_engine`.
-    if let lopdf::Error::IO(io) = &error {
-        return PdfCoreError::Io {
-            path: path.to_path_buf(),
-            source: std::io::Error::new(io.kind(), io.to_string()),
-        };
-    }
-    PdfCoreError::from_engine(error)
 }

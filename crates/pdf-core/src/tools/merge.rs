@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use lopdf::{dictionary, Document, Object, ObjectId};
 
 use crate::error::{PdfCoreError, PdfCoreResult};
+use crate::loading;
 
 /// Merge multiple PDFs into a single document, preserving page order.
 ///
@@ -23,7 +24,7 @@ pub fn merge(inputs: &[PathBuf], output: &Path) -> PdfCoreResult<u32> {
     let mut objects: BTreeMap<ObjectId, Object> = BTreeMap::new();
 
     for path in inputs {
-        let mut document = Document::load(path).map_err(|error| map_load(path, error))?;
+        let mut document = loading::load(path)?;
 
         // Shift every object id so ids stay unique across documents.
         document.renumber_objects_with(max_id);
@@ -83,14 +84,4 @@ pub fn merge(inputs: &[PathBuf], output: &Path) -> PdfCoreResult<u32> {
         .map_err(|error| PdfCoreError::Other(format!("failed to write merged PDF: {error}")))?;
 
     Ok(page_count)
-}
-
-fn map_load(path: &Path, error: lopdf::Error) -> PdfCoreError {
-    if let lopdf::Error::IO(io) = &error {
-        return PdfCoreError::Io {
-            path: path.to_path_buf(),
-            source: std::io::Error::new(io.kind(), io.to_string()),
-        };
-    }
-    PdfCoreError::from_engine(error)
 }

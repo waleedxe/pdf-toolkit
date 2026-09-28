@@ -12,13 +12,7 @@ use crate::error::{PdfCoreError, PdfCoreResult};
 
 /// Load a PDF, mapping engine errors to the core error model.
 pub(crate) fn load(path: &std::path::Path) -> PdfCoreResult<lopdf::Document> {
-    lopdf::Document::load(path).map_err(|error| match &error {
-        lopdf::Error::IO(io) => PdfCoreError::Io {
-            path: path.to_path_buf(),
-            source: std::io::Error::new(io.kind(), io.to_string()),
-        },
-        _ => PdfCoreError::from_engine(error),
-    })
+    crate::loading::load(path)
 }
 
 /// Resolve an optional page selection to a concrete list, validating bounds.

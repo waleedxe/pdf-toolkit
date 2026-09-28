@@ -13,8 +13,11 @@ pub mod error;
 pub mod text;
 pub mod tools;
 
+mod loading;
+
 pub use document::PdfDocument;
 pub use error::{PdfCoreError, PdfCoreResult};
+pub use loading::MAX_DECOMPRESSED_BYTES;
 pub use text::{embed_font, shape_text, ShapedText, EMBEDDED_FONT, EMBEDDED_FONT_NAME};
 pub use tools::{
     add_page_numbers, extract_pages, images_to_pdf, merge, page_count, parse_page_selection,

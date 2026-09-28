@@ -37,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   permissions, and **Unlock PDF** using a known password only (never cracking/bypass).
 - Split the application services into a Tauri-free `pdf-service` crate for portable testing,
   and added validation tests including an Arabic watermark render check.
+- Hardening: all PDF loads now go through one loader that applies a 256 MiB per-stream
+  decompression limit (defence against decompression-bomb inputs), plus a 100+ page
+  scale test covering merge/split/extract/remove/rotate.
 
 ### Fixed
 

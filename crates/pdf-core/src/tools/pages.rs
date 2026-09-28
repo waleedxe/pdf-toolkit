@@ -4,10 +4,11 @@ use std::path::{Path, PathBuf};
 use lopdf::{dictionary, Document, Object, ObjectId};
 
 use crate::error::{PdfCoreError, PdfCoreResult};
+use crate::loading;
 
 /// Number of pages in a PDF on disk.
 pub fn page_count(input: &Path) -> PdfCoreResult<u32> {
-    let document = Document::load(input).map_err(|error| map_load(input, error))?;
+    let document = loading::load(input)?;
     Ok(document.get_pages().len() as u32)
 }
 
@@ -19,7 +20,7 @@ pub fn extract_pages(input: &Path, pages: &[u32], output: &Path) -> PdfCoreResul
         ));
     }
 
-    let source = Document::load(input).map_err(|error| map_load(input, error))?;
+    let source = loading::load(input)?;
     let mut document = rebuild(&source, pages)?;
     save(&mut document, output)?;
     Ok(pages.len() as u32)
@@ -33,7 +34,7 @@ pub fn remove_pages(input: &Path, pages: &[u32], output: &Path) -> PdfCoreResult
         ));
     }
 
-    let source = Document::load(input).map_err(|error| map_load(input, error))?;
+    let source = loading::load(input)?;
     let total = source.get_pages().len() as u32;
     for &page in pages {
         ensure_in_range(page, total)?;
@@ -69,7 +70,7 @@ pub fn split_pdf(input: &Path, groups: &[Vec<u32>], outputs: &[PathBuf]) -> PdfC
         ));
     }
 
-    let source = Document::load(input).map_err(|error| map_load(input, error))?;
+    let source = loading::load(input)?;
     let mut written = 0u32;
     for (group, output) in groups.iter().zip(outputs) {
         if group.is_empty() {
@@ -100,7 +101,7 @@ pub fn rotate_pages(
         ));
     }
 
-    let mut document = Document::load(input).map_err(|error| map_load(input, error))?;
+    let mut document = loading::load(input)?;
     let total = document.get_pages().len() as u32;
     let selected: Vec<u32> = match pages {
         Some(list) => {
@@ -213,14 +214,4 @@ fn save(document: &mut Document, output: &Path) -> PdfCoreResult<()> {
         .save(output)
         .map_err(|error| PdfCoreError::Other(format!("failed to write PDF: {error}")))?;
     Ok(())
-}
-
-fn map_load(path: &Path, error: lopdf::Error) -> PdfCoreError {
-    if let lopdf::Error::IO(io) = &error {
-        return PdfCoreError::Io {
-            path: path.to_path_buf(),
-            source: std::io::Error::new(io.kind(), io.to_string()),
-        };
-    }
-    PdfCoreError::from_engine(error)
 }

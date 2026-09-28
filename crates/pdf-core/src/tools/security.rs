@@ -9,7 +9,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use lopdf::encryption::crypt_filters::{Aes128CryptFilter, CryptFilter};
-use lopdf::{Document, EncryptionState, EncryptionVersion, Permissions};
+use lopdf::{Document, EncryptionState, EncryptionVersion, LoadOptions, Permissions};
 
 use crate::error::{PdfCoreError, PdfCoreResult};
 
@@ -52,7 +52,11 @@ pub fn protect(input: &Path, options: &ProtectOptions, output: &Path) -> PdfCore
         ));
     }
 
-    let mut document = Document::load(input).map_err(map_load(input))?;
+    let mut document = Document::load_with_options(
+        input,
+        LoadOptions::with_max_decompressed_size(crate::loading::MAX_DECOMPRESSED_BYTES),
+    )
+    .map_err(map_load(input))?;
     if document.is_encrypted() {
         return Err(PdfCoreError::Other(
             "this PDF is already protected; unlock it first".to_string(),
@@ -100,8 +104,15 @@ pub fn unlock(input: &Path, password: &str, output: &Path) -> PdfCoreResult<u32>
         ));
     }
 
-    let mut document = Document::load_with_password(input, password)
-        .map_err(|error| map_unlock_error(input, error))?;
+    let mut document = Document::load_with_options(
+        input,
+        LoadOptions {
+            password: Some(password.to_string()),
+            max_decompressed_size: Some(crate::loading::MAX_DECOMPRESSED_BYTES),
+            ..Default::default()
+        },
+    )
+    .map_err(|error| map_unlock_error(input, error))?;
 
     if !document.was_encrypted() {
         return Err(PdfCoreError::Other(
