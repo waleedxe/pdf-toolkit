@@ -128,8 +128,16 @@ This produces an executable and an NSIS installer under `src-tauri/target/releas
 
 ## Install (end users)
 
-Download the latest NSIS installer (`PDF Toolkit_x.y.z_x64-setup.exe`) from the
-[Releases](../../releases) page and run it. No account, no internet connection required.
+Two ways, both from the [Releases](../../releases) page (no account, no internet needed at
+runtime):
+
+- **Installer (recommended):** download `PDF Toolkit_x.y.z_x64-setup.exe` and run it — a normal
+  Next → Next → Install wizard, with a Start-menu shortcut and uninstaller.
+- **Portable:** download `PDF-Toolkit-portable-windows-x64.zip`, extract it, and run
+  `pdf-toolkit.exe`. Nothing is installed.
+
+The app is unsigned for now, so Windows SmartScreen may warn once: **More info → Run anyway**.
+WebView2 is required and already ships with Windows 10/11.
 
 ## Limitations
 

@@ -217,3 +217,18 @@ principle, while making the engineering loop runnable locally.
   6. **Conclusion:** the supported Windows build is **MSVC** — natively on Windows, or via the
      GitHub Actions `release.yml` (windows-latest). Do not ship the GNU cross-built installer.
   7. **Still open:** runtime launch and the official MSVC installer (Windows/CI); GitHub push.
+
+- **Session 5 — DELIVERED (project closed)**:
+  1. Created the **private** GitHub repo `waleedxe/pdf-toolkit` and pushed `main`.
+  2. Fixed CI's flaky `pdf-render` test (parallel tests shared one temp fixture →
+     per-test directory now) and corrected the release workflow's artifact paths (a Cargo
+     workspace outputs under the workspace-root `target/`, not `src-tauri/target/`).
+  3. Tagged **`v0.1.0`**; the **Windows (MSVC) release workflow passed** and produced:
+     `PDF.Toolkit_0.1.0_x64-setup.exe` (NSIS installer) + `PDF-Toolkit-portable-windows-x64.zip`.
+     The release was published; CI is green (frontend + Windows app check + Rust tests).
+  4. Downloaded both artifacts to the user's Windows Desktop; the user **ran the app and
+     confirmed all tools work** ("wow"). End-to-end verified on real Windows.
+  5. Added `docs/PROJECT-AR.md` (Arabic guide: project, stack, architecture, how to build the
+     EXE, and how to add features).
+  6. **Remaining (user-side, optional):** revoke the temporary GitHub token; flip the repo to
+     public when ready; optionally add code signing.

@@ -4,7 +4,9 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-09-29
+
+First public MVP release. Windows NSIS installer + portable build published from CI.
 
 ### Added
 
@@ -47,3 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `src/lib/tauri.ts`, `src/lib/paths.ts`, `src/hooks/useFileDrop.ts`, and cleaned
   `src-tauri/src/lib.rs` / `src-tauri/src/pdf/mod.rs`.
 - Restored the missing frontend `devDependencies` so lint, typecheck, tests, and builds run.
+- Fixed the Tauri command layer's missing `use crate::pdf` import (found by cross-checking the
+  app crate for Windows; it had never compiled).
+- Aligned the Tauri plugin npm/crate versions and made the app desktop-only
+  (`crate-type = ["rlib"]`) so the Windows build links cleanly.
+- Made `pdf-render` tests parallel-safe (each test now uses its own temp fixture) and corrected
+  the release workflow's artifact paths for a Cargo workspace.
+- **Released `v0.1.0`:** Windows (MSVC) NSIS installer + portable zip, built by GitHub Actions
+  and verified to run on Windows.
