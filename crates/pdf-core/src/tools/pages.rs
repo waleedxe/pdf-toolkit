@@ -5,6 +5,7 @@ use lopdf::{dictionary, Document, Object, ObjectId};
 
 use crate::error::{PdfCoreError, PdfCoreResult};
 use crate::loading;
+use crate::tools::content;
 
 /// Number of pages in a PDF on disk.
 pub fn page_count(input: &Path) -> PdfCoreResult<u32> {
@@ -171,7 +172,14 @@ fn rebuild(source: &Document, pages: &[u32]) -> PdfCoreResult<Document> {
     next_id += 1;
 
     for &id in &selected {
+        // A rebuilt tree drops the original `/Pages` nodes, so any attribute the
+        // page inherited from them (MediaBox, Resources, ...) must be copied onto
+        // the page itself.
+        let inherited = content::inherited_attributes(source, id);
         if let Some(Object::Dictionary(dict)) = objects.get_mut(&id) {
+            for (key, value) in inherited {
+                dict.set(key, value);
+            }
             dict.set("Parent", pages_id);
         }
     }

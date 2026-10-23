@@ -8,6 +8,7 @@
 pub mod filesystem;
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use pdf_core::parse_page_selection;
 use pdf_core::{
@@ -18,25 +19,114 @@ use pdf_render::{ImageFormat, RenderedImage};
 
 pub use pdf_core::{PdfCoreError, PdfDocument};
 
+/// Counter used to keep temporary output names unique within a process.
+static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+/// Reject an output path that resolves to the same file as an input.
+///
+/// Canonicalisation collapses `.`/`..`, relative paths and symlinks; the
+/// comparison is case-insensitive on Windows, where file names are.
+fn ensure_not_input(input: &Path, output: &Path) -> Result<(), PdfCoreError> {
+    if same_file(input, output) {
+        return Err(PdfCoreError::Other(format!(
+            "the output path is the same file as the input ({}); choose a different name so the original is not overwritten",
+            input.display()
+        )));
+    }
+    Ok(())
+}
+
+fn same_file(first: &Path, second: &Path) -> bool {
+    match (first.canonicalize(), second.canonicalize()) {
+        (Ok(first), Ok(second)) => normalize_path(&first) == normalize_path(&second),
+        _ => false,
+    }
+}
+
+fn normalize_path(path: &Path) -> String {
+    let text = path.to_string_lossy().into_owned();
+    if cfg!(target_os = "windows") {
+        text.to_lowercase()
+    } else {
+        text
+    }
+}
+
+/// Write a single-output tool's result atomically.
+///
+/// The tool writes to a temporary file beside `output`; only once it has
+/// finished successfully is that file renamed over `output`. A failure or a
+/// crash therefore never leaves a truncated output, and the original output is
+/// only replaced when the new one is complete.
+fn write_atomically<T>(
+    output: &Path,
+    run: impl FnOnce(&Path) -> Result<T, PdfCoreError>,
+) -> Result<T, PdfCoreError> {
+    let temporary = temporary_output(output);
+    match run(&temporary) {
+        Ok(value) => {
+            if let Err(source) = std::fs::rename(&temporary, output) {
+                let _ = std::fs::remove_file(&temporary);
+                return Err(PdfCoreError::Io {
+                    path: output.to_path_buf(),
+                    source,
+                });
+            }
+            Ok(value)
+        }
+        Err(error) => {
+            let _ = std::fs::remove_file(&temporary);
+            Err(error)
+        }
+    }
+}
+
+/// A unique temporary path in the same directory as `output`.
+fn temporary_output(output: &Path) -> PathBuf {
+    let directory = match output.parent() {
+        Some(parent) if !parent.as_os_str().is_empty() => parent,
+        _ => Path::new("."),
+    };
+    let stem = output
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .unwrap_or("output");
+    let unique = format!(
+        ".{stem}.{}.{}.tmp",
+        std::process::id(),
+        TEMP_COUNTER.fetch_add(1, Ordering::Relaxed)
+    );
+    directory.join(unique)
+}
+
 /// Merge several PDFs into a new file, preserving input order.
 ///
 /// The originals are never modified. Returns the page count of the result.
 pub fn merge(inputs: &[PathBuf], output: &Path) -> Result<u32, PdfCoreError> {
-    pdf_core::merge(inputs, output)
+    for input in inputs {
+        ensure_not_input(input, output)?;
+    }
+    write_atomically(output, |temporary| pdf_core::merge(inputs, temporary))
 }
 
 /// Extract the pages named by `selection` (e.g. `1-4,8,11-15`) into `output`.
 pub fn extract(input: &Path, selection: &str, output: &Path) -> Result<u32, PdfCoreError> {
+    ensure_not_input(input, output)?;
     let total = pdf_core::page_count(input)?;
     let pages = parse_page_selection(selection, total)?;
-    pdf_core::extract_pages(input, &pages, output)
+    write_atomically(output, |temporary| {
+        pdf_core::extract_pages(input, &pages, temporary)
+    })
 }
 
 /// Remove the pages named by `selection` and write the rest to `output`.
 pub fn remove(input: &Path, selection: &str, output: &Path) -> Result<u32, PdfCoreError> {
+    ensure_not_input(input, output)?;
     let total = pdf_core::page_count(input)?;
     let pages = parse_page_selection(selection, total)?;
-    pdf_core::remove_pages(input, &pages, output)
+    write_atomically(output, |temporary| {
+        pdf_core::remove_pages(input, &pages, temporary)
+    })
 }
 
 /// Rotate selected pages (`None` means all) clockwise by `rotation` degrees.
@@ -46,12 +136,15 @@ pub fn rotate(
     rotation: i64,
     output: &Path,
 ) -> Result<u32, PdfCoreError> {
+    ensure_not_input(input, output)?;
     let total = pdf_core::page_count(input)?;
     let pages = match selection {
         Some(value) if !value.trim().is_empty() => Some(parse_page_selection(value, total)?),
         _ => None,
     };
-    pdf_core::rotate_pages(input, pages.as_deref(), rotation, output)
+    write_atomically(output, |temporary| {
+        pdf_core::rotate_pages(input, pages.as_deref(), rotation, temporary)
+    })
 }
 
 /// Reorder pages by writing them in the given 1-based order.
@@ -61,7 +154,10 @@ pub fn reorder(input: &Path, order: &[u32], output: &Path) -> Result<u32, PdfCor
             "the new page order is empty".to_string(),
         ));
     }
-    pdf_core::extract_pages(input, order, output)
+    ensure_not_input(input, output)?;
+    write_atomically(output, |temporary| {
+        pdf_core::extract_pages(input, order, temporary)
+    })
 }
 
 /// Convert a list of images (in order) into a single PDF.
@@ -79,7 +175,12 @@ pub fn images_to_pdf(
         fit: FitMode::parse(fit)?,
         margin,
     };
-    pdf_core::images_to_pdf(images, options, output)
+    for image in images {
+        ensure_not_input(image, output)?;
+    }
+    write_atomically(output, |temporary| {
+        pdf_core::images_to_pdf(images, options, temporary)
+    })
 }
 
 /// Parse an optional page selection against a document's page count.
@@ -116,7 +217,10 @@ pub fn watermark_text(
         color,
         position: Position::parse(position)?,
     };
-    pdf_core::watermark_text(input, pages.as_deref(), &watermark, output)
+    ensure_not_input(input, output)?;
+    write_atomically(output, |temporary| {
+        pdf_core::watermark_text(input, pages.as_deref(), &watermark, temporary)
+    })
 }
 
 /// Stamp an image watermark onto selected pages.
@@ -139,7 +243,10 @@ pub fn watermark_image(
         rotation,
         position: Position::parse(position)?,
     };
-    pdf_core::watermark_image(input, image_path, pages.as_deref(), &watermark, output)
+    ensure_not_input(input, output)?;
+    write_atomically(output, |temporary| {
+        pdf_core::watermark_image(input, image_path, pages.as_deref(), &watermark, temporary)
+    })
 }
 
 /// Add page numbers to selected pages.
@@ -165,7 +272,10 @@ pub fn add_page_numbers(
         margin,
         color,
     };
-    pdf_core::add_page_numbers(input, pages.as_deref(), &options, output)
+    ensure_not_input(input, output)?;
+    write_atomically(output, |temporary| {
+        pdf_core::add_page_numbers(input, pages.as_deref(), &options, temporary)
+    })
 }
 
 /// Encrypt a PDF with a password (AES-128).
@@ -184,12 +294,18 @@ pub fn protect(
         allow_copying,
         allow_modifying,
     };
-    pdf_core::protect(input, &options, output)
+    ensure_not_input(input, output)?;
+    write_atomically(output, |temporary| {
+        pdf_core::protect(input, &options, temporary)
+    })
 }
 
 /// Remove protection using the correct password.
 pub fn unlock(input: &Path, password: &str, output: &Path) -> Result<u32, PdfCoreError> {
-    pdf_core::unlock(input, password, output)
+    ensure_not_input(input, output)?;
+    write_atomically(output, |temporary| {
+        pdf_core::unlock(input, password, temporary)
+    })
 }
 
 /// How Split decides which pages belong together.

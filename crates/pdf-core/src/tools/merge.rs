@@ -5,6 +5,7 @@ use lopdf::{dictionary, Document, Object, ObjectId};
 
 use crate::error::{PdfCoreError, PdfCoreResult};
 use crate::loading;
+use crate::tools::content;
 
 /// Merge multiple PDFs into a single document, preserving page order.
 ///
@@ -31,10 +32,18 @@ pub fn merge(inputs: &[PathBuf], output: &Path) -> PdfCoreResult<u32> {
         max_id = document.max_id + 1;
 
         for (_, page_id) in document.get_pages() {
-            let page = document
+            // Materialise attributes the page inherited from its `/Pages`
+            // ancestors before the tree is rebuilt without those ancestors.
+            let inherited = content::inherited_attributes(&document, page_id);
+            let mut page = document
                 .get_object(page_id)
                 .map_err(PdfCoreError::from_engine)?
                 .to_owned();
+            if let Object::Dictionary(dict) = &mut page {
+                for (key, value) in inherited {
+                    dict.set(key, value);
+                }
+            }
             pages.push(page);
         }
 

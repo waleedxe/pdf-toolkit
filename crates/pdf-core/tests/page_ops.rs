@@ -25,6 +25,16 @@ fn rotation_of(path: &Path, page: u32) -> Option<i64> {
     }
 }
 
+/// The value a page holds directly under `key`, or `None` if it only inherits it.
+fn own_attribute(path: &Path, page: u32, key: &[u8]) -> Option<Object> {
+    let document = Document::load(path).expect("output should load");
+    let id = document.get_pages()[&page];
+    match document.get_object(id).expect("page should exist") {
+        Object::Dictionary(dict) => dict.get(key).ok().cloned(),
+        _ => None,
+    }
+}
+
 #[test]
 fn extract_keeps_selected_pages_and_order() {
     let dir = temp_dir("extract");
@@ -151,5 +161,51 @@ fn page_count_reads_documents() {
     let dir = temp_dir("count");
     let source = common::write_pdf(&dir, "source.pdf", 7);
     assert_eq!(page_count(&source).unwrap(), 7);
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn extract_materializes_inherited_attributes() {
+    let dir = temp_dir("extract-inherited");
+    let source = common::write_inherited_pdf(&dir, "source.pdf", 3);
+    let output = dir.join("extracted.pdf");
+
+    let count = extract_pages(&source, &[2], &output).expect("extract should succeed");
+    assert_eq!(count, 1);
+
+    // The source page inherits both attributes from the parent `/Pages` node;
+    // the rebuilt document must carry them on the page itself.
+    let media = own_attribute(&output, 1, b"MediaBox").expect("page needs its own MediaBox");
+    assert!(matches!(media, Object::Array(values) if values.len() == 4));
+    assert!(
+        own_attribute(&output, 1, b"Resources").is_some(),
+        "page needs its own Resources"
+    );
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn split_materializes_inherited_attributes() {
+    let dir = temp_dir("split-inherited");
+    let source = common::write_inherited_pdf(&dir, "source.pdf", 2);
+    let outputs: Vec<PathBuf> = ["a.pdf", "b.pdf"]
+        .iter()
+        .map(|name| dir.join(name))
+        .collect();
+
+    split_pdf(&source, &[vec![1], vec![2]], &outputs).expect("split should succeed");
+
+    for output in &outputs {
+        assert!(
+            own_attribute(output, 1, b"MediaBox").is_some(),
+            "split page needs its own MediaBox"
+        );
+        assert!(
+            own_attribute(output, 1, b"Resources").is_some(),
+            "split page needs its own Resources"
+        );
+    }
+
     std::fs::remove_dir_all(&dir).ok();
 }

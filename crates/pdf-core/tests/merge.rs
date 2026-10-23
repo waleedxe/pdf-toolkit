@@ -1,5 +1,6 @@
 mod common;
 
+use lopdf::Document;
 use pdf_core::tools::merge;
 use pdf_core::{PdfCoreError, PdfDocument};
 
@@ -60,6 +61,34 @@ fn merge_fails_safely_on_a_missing_input() {
     let result = merge(&[dir.join("does-not-exist.pdf")], &output);
     assert!(matches!(result, Err(PdfCoreError::Io { .. })));
     assert!(!output.exists(), "no output should be produced on failure");
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn merge_materializes_inherited_attributes() {
+    let dir = temp_dir("merge-inherited");
+    let first = common::write_inherited_pdf(&dir, "first.pdf", 2);
+    let second = common::write_inherited_pdf(&dir, "second.pdf", 1);
+    let output = dir.join("merged.pdf");
+
+    let count = merge(&[first, second], &output).expect("merge should succeed");
+    assert_eq!(count, 3);
+
+    // Every page must carry its own MediaBox/Resources: the source `/Pages`
+    // nodes that provided them are gone from the merged tree.
+    let document = Document::load(&output).expect("merged output should load");
+    for (_, id) in document.get_pages() {
+        let page = document.get_dictionary(id).expect("page dictionary");
+        assert!(
+            page.get(b"MediaBox").is_ok(),
+            "every merged page needs its own MediaBox"
+        );
+        assert!(
+            page.get(b"Resources").is_ok(),
+            "every merged page needs its own Resources"
+        );
+    }
 
     std::fs::remove_dir_all(&dir).ok();
 }

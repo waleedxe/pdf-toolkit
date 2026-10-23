@@ -1,10 +1,12 @@
 //! Tests for generated text (watermark / page numbers), including Arabic.
 
+mod common;
+
 use std::path::{Path, PathBuf};
 
 use image::{Rgb, RgbImage};
 use lopdf::content::{Content, Operation};
-use lopdf::{dictionary, Document, Object, Stream};
+use lopdf::{dictionary, Document, Object, ObjectId, Stream};
 use pdf_core::{
     add_page_numbers, shape_text, watermark_image, watermark_text, Horizontal, ImageWatermark,
     PageNumberOptions, PdfDocument, Position, TextWatermark, Vertical,
@@ -172,6 +174,119 @@ fn page_numbers_are_added_to_selected_pages() {
 
     let bytes = std::fs::read(&output).unwrap();
     assert!(contains(&bytes, b"Amiri-Regular"));
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+/// Names of the fonts in a page's (possibly inherited) `/Resources`.
+fn page_resource_fonts(document: &Document, page_id: ObjectId) -> Vec<String> {
+    let page = document.get_dictionary(page_id).expect("page dictionary");
+    let resources = page
+        .get_deref(b"Resources", document)
+        .expect("page resources")
+        .as_dict()
+        .expect("resources dictionary");
+    let fonts = resources
+        .get_deref(b"Font", document)
+        .expect("font resources")
+        .as_dict()
+        .expect("font dictionary");
+    fonts
+        .iter()
+        .map(|(name, _)| String::from_utf8_lossy(name).to_string())
+        .collect()
+}
+
+#[test]
+fn watermark_preserves_indirect_page_resources() {
+    // `write_pdf` stores `/Resources` as an indirect reference, exactly like
+    // most real PDFs. Watermarking must add to that dictionary, not replace it.
+    let dir = temp_dir("wm-indirect-resources");
+    let source = write_pdf(&dir, "source.pdf", 1, true);
+    let output = dir.join("watermarked.pdf");
+
+    let before = Document::load(&source).unwrap();
+    let before_id = before.get_pages()[&1];
+    assert!(page_resource_fonts(&before, before_id).contains(&"F1".to_string()));
+
+    let watermark = TextWatermark {
+        text: "Draft".to_string(),
+        font_size: 48.0,
+        opacity: 0.35,
+        rotation: 0.0,
+        color: 0.5,
+        position: Position::Center,
+    };
+    watermark_text(&source, None, &watermark, &output).expect("watermark");
+
+    let after = Document::load(&output).unwrap();
+    let after_id = after.get_pages()[&1];
+    let fonts = page_resource_fonts(&after, after_id);
+    assert!(
+        fonts.contains(&"F1".to_string()),
+        "the original font F1 must survive, found {fonts:?}"
+    );
+    assert!(
+        fonts.contains(&"Fwm".to_string()),
+        "the watermark font must be added, found {fonts:?}"
+    );
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn watermark_handles_inherited_mediabox_and_resources() {
+    let dir = temp_dir("wm-inherited");
+    let source = common::write_inherited_pdf(&dir, "source.pdf", 2);
+    let output = dir.join("watermarked.pdf");
+
+    let watermark = TextWatermark {
+        text: "Draft".to_string(),
+        font_size: 48.0,
+        opacity: 0.35,
+        rotation: 0.0,
+        color: 0.5,
+        position: Position::Center,
+    };
+    let count =
+        watermark_text(&source, None, &watermark, &output).expect("inherited MediaBox watermark");
+    assert_eq!(count, 2);
+
+    let document = Document::load(&output).unwrap();
+    for (_, id) in document.get_pages() {
+        let fonts = page_resource_fonts(&document, id);
+        assert!(
+            fonts.contains(&"F1".to_string()),
+            "the inherited font F1 must survive, found {fonts:?}"
+        );
+        assert!(
+            fonts.contains(&"Fwm".to_string()),
+            "the watermark font must be added, found {fonts:?}"
+        );
+    }
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn page_numbers_handle_inherited_mediabox() {
+    let dir = temp_dir("numbers-inherited");
+    let source = common::write_inherited_pdf(&dir, "source.pdf", 1);
+    let output = dir.join("numbered.pdf");
+
+    let options = PageNumberOptions {
+        vertical: Vertical::Bottom,
+        horizontal: Horizontal::Right,
+        start: 1,
+        font_size: 12.0,
+        margin: 36.0,
+        color: 0.0,
+    };
+    add_page_numbers(&source, None, &options, &output).expect("inherited MediaBox numbers");
+
+    let document = Document::load(&output).unwrap();
+    let id = document.get_pages()[&1];
+    assert!(page_resource_fonts(&document, id).contains(&"Fwm".to_string()));
+
     std::fs::remove_dir_all(&dir).ok();
 }
 

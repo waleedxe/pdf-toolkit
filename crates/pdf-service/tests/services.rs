@@ -6,7 +6,7 @@ use lopdf::content::{Content, Operation};
 use lopdf::{dictionary, Document, Object, Stream};
 use pdf_render::ImageFormat;
 use pdf_service::filesystem::{unique_path, unique_run_stem};
-use pdf_service::{extract, reorder, split, to_images, SplitMode};
+use pdf_service::{extract, merge, reorder, split, to_images, SplitMode};
 
 fn build_pdf(page_count: usize) -> Vec<u8> {
     let mut doc = Document::with_version("1.5");
@@ -142,6 +142,74 @@ fn to_images_writes_png_files() {
     assert_eq!(outputs.len(), 1);
     let bytes = std::fs::read(&outputs[0]).unwrap();
     assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn extract_rejects_output_equal_to_input() {
+    let dir = temp_dir("same-path");
+    let source = write_pdf(&dir, "source.pdf", 3);
+    let before = std::fs::read(&source).unwrap();
+
+    let result = extract(&source, "1", &source);
+    assert!(matches!(result, Err(pdf_core::PdfCoreError::Other(_))));
+    assert_eq!(
+        std::fs::read(&source).unwrap(),
+        before,
+        "the input must be byte-identical after a rejected call"
+    );
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn extract_rejects_output_aliasing_input() {
+    let dir = temp_dir("same-path-alias");
+    let source = write_pdf(&dir, "source.pdf", 2);
+    // Same file reached through a different textual path.
+    let alias = dir.join(".").join("source.pdf");
+    let before = std::fs::read(&source).unwrap();
+
+    let result = extract(&source, "1", &alias);
+    assert!(result.is_err(), "an aliased output path must be rejected");
+    assert_eq!(std::fs::read(&source).unwrap(), before);
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn merge_rejects_output_equal_to_an_input() {
+    let dir = temp_dir("merge-same-path");
+    let first = write_pdf(&dir, "first.pdf", 1);
+    let second = write_pdf(&dir, "second.pdf", 1);
+    let before = std::fs::read(&second).unwrap();
+
+    let result = merge(&[first, second.clone()], &second);
+    assert!(result.is_err());
+    assert_eq!(std::fs::read(&second).unwrap(), before);
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn successful_write_leaves_no_temporary_files() {
+    let dir = temp_dir("atomic-clean");
+    let source = write_pdf(&dir, "source.pdf", 2);
+    let output = dir.join("out.pdf");
+
+    extract(&source, "1", &output).unwrap();
+
+    let leftovers: Vec<String> = std::fs::read_dir(&dir)
+        .unwrap()
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.file_name().to_string_lossy().into_owned())
+        .filter(|name| name.ends_with(".tmp"))
+        .collect();
+    assert!(
+        leftovers.is_empty(),
+        "temporary files left behind: {leftovers:?}"
+    );
 
     std::fs::remove_dir_all(&dir).ok();
 }
