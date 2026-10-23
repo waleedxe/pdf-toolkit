@@ -29,6 +29,8 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "publisher": "Waleed",
+    "copyright": "Copyright (c) 2026 Waleed",
     "category": "Utility",
     "shortDescription": "Local-first PDF toolkit",
     "longDescription": "A fast, private PDF toolkit that processes files entirely on your device, with full Arabic and English support.",

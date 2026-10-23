@@ -4,6 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Local-first, offline, Arabic + English PDF desktop toolkit",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

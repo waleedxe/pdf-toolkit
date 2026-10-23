@@ -13,6 +13,17 @@ popular online PDF websites while processing everything **on your device**.
 
 > **Status:** MVP complete. All twelve tools work on real documents.
 
+## Download
+
+Get the latest build from the [**Releases**](../../releases/latest) page:
+
+- **Installer (`.exe`)** — recommended: run the setup wizard (Next → Next → Install) for a
+  Start-menu shortcut and uninstaller.
+- **Portable (`.zip`)** — extract it and run `pdf-toolkit.exe`; nothing is installed.
+
+Builds are **unsigned**, so Windows SmartScreen may warn on first run: click **More info →
+Run anyway**. No account is needed and no internet connection is required at runtime.
+
 ## Supported tools
 
 | Category | Tools |
@@ -156,5 +167,5 @@ WebView2 is required and already ships with Windows 10/11.
 
 ## License
 
-To be finalized before public release. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
+Released under the [MIT License](LICENSE). See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
 for third-party components; all bundled engines use permissive licenses.
