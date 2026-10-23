@@ -2934,7 +2934,7 @@ dependencies = [
 
 [[package]]
 name = "pdf-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "flate2",
  "image",
@@ -2946,7 +2946,7 @@ dependencies = [
 
 [[package]]
 name = "pdf-render"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "hayro",
  "image",
@@ -2956,7 +2956,7 @@ dependencies = [
 
 [[package]]
 name = "pdf-service"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "lopdf",
  "pdf-core",
@@ -2965,7 +2965,7 @@ dependencies = [
 
 [[package]]
 name = "pdf-toolkit"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "pdf-core",

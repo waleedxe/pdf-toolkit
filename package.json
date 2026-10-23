@@ -1,7 +1,7 @@
 {
   "name": "pdf-toolkit",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Local-first, offline, Arabic + English PDF desktop toolkit",
   "license": "MIT",

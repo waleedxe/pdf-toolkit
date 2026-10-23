@@ -4,6 +4,29 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-10-23
+
+### Fixed
+
+- Watermark and page-number tools no longer replace a page's `/Resources` when it
+  is an indirect or inherited reference (previously this could drop the page's
+  fonts and images).
+- Page-tree rebuilds (extract, remove, split, reorder, merge) now materialise
+  inherited `MediaBox`/`Resources`/`CropBox`/`Rotate`, so output pages are
+  self-contained and render correctly.
+- `page_size` resolves indirect and inherited boxes and prefers `CropBox`.
+- Tools now refuse an output path equal to the input file and write atomically
+  (temp file + rename), so the original is never overwritten or truncated.
+
+### Added
+
+- Regression tests for indirect/inherited page resources and output-path safety.
+- The MIT `LICENSE` file.
+
+### Changed
+
+- Added a Download section to the README.
+
 ## [0.1.0] - 2026-09-29
 
 First public MVP release. Windows NSIS installer + portable build published from CI.
